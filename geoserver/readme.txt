@@ -1,0 +1,1 @@
+Setup.sh used to initialize GeoServer (Workspace, layers, Sources, …)

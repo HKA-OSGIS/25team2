@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Roads Analysis Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 100vh; }
+        
+        /* Legend / Overlay Styling */
+        .map-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 1;
+        }
+        .legend-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="map-overlay">
+    <div class="legend-title">Tempo 30 Candidates</div>
+    <ul class="mt-2 space-y-1">
+        <li class="text-sm flex items-center">
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #3b82f6;"></span>
+            <span class="font-medium">All roads</span>
+        </li>
+        <li class="text-sm flex items-center">
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #1f78b4;"></span>
+            <span class="font-medium">Residential</span>
+        </li>
+        <li class="text-sm flex items-center">
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #33a02c;"></span>
+            <span class="font-medium">Social facilities</span>
+        </li>
+        <li class="text-sm flex items-center">
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #ff7f00;"></span>
+            <span class="font-medium">Noise protection</span>
+        </li>
+        <li class="text-sm flex items-center">
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #6a3d9a;"></span>
+            <span class="font-medium">Gap filling</span>
+        </li>
+    </ul>
+</div>
+
+
+<script>
+    // Proxy URL
+    const PROXY_URL = 'http://localhost:3000';
+
+    // Map initialization
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json', 
+        center: [8.725420946651067, 53.11198049933926], // Center in Bremen
+        zoom: 12
+    });
+
+    // Zoom and rotation controls
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    map.on('load', () => {
+        console.log('Map loaded successfully');
+
+        // Layer 1: All roads
+        map.addSource('all_roads', {
+            type: 'geojson',
+            data: `${PROXY_URL}/roads-wfs` 
+        });
+
+    map.addLayer({
+        id: 'eligible_roads_layer',
+        type: 'line',
+        source: 'eligible_roads',
+        layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        paint: {
+            // Farbe nach category
+            'line-color': [
+                'match',
+                ['get', 'category'],
+                'residential', '#1f78b4', // blau
+                'social',      '#33a02c', // grün
+                'noise',       '#ff7f00', // orange
+                'gapfill',     '#6a3d9a', // lila
+                '#ef4444'                  // fallback
+            ],
+            'line-width': 3,
+            'line-opacity': 0.9
+        }
+    });
+
+
+
+        // Layer 2: Eligible roads (Tempo 30)
+        map.addSource('eligible_roads', {
+            type: 'geojson',
+            data: `${PROXY_URL}/tempo30-wfs`
+        });
+
+        map.addLayer({
+            id: 'eligible_roads_layer',
+            type: 'line',
+            source: 'eligible_roads',
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            paint: {
+                'line-color': '#ef4444', // Rot
+                'line-width': 3,
+                'line-opacity': 0.9
+            }
+        });
+
+        console.log('Layers added successfully pointing to Proxy');
+
+        // Zoom to data extent of eligible roads after source is loaded
+        map.on('sourcedata', (e) => {
+            if (e.sourceId === 'eligible_roads' && e.isSourceLoaded) {
+                const features = map.querySourceFeatures('eligible_roads');
+                if (features.length > 0) {
+                    // Create a bounding box around all features
+                    const bounds = new maplibregl.LngLatBounds();
+                    features.forEach(feature => {
+                        if (feature.geometry.type === 'LineString') {
+                            feature.geometry.coordinates.forEach(coord => {
+                                bounds.extend(coord);
+                            });
+                        }
+                    });
+                    // Zoom to this bounding box
+                    map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+                }
+            }
+        });
+    });
+
+    // Error handling for MapLibre
+    map.on('error', (e) => {
+        console.error('MapLibre GL Error:', e.error);
+    });
+
+    // Interaction: Popup on click
+    map.on('click', 'eligible_roads_layer', (e) => {
+        const props = e.features[0].properties;
+    
+        const name = props.name || 'Unnamed road';
+        const category = props.category || 'unknown';
+        const justification = props.justification || '';
+    
+        let categoryLabel;
+        switch (category) {
+            case 'residential':
+                categoryLabel = 'Residential (automatic candidate)';
+                break;
+            case 'social':
+                categoryLabel = 'Social facilities (school / kindergarten / hospital / playground / crossing)';
+                break;
+            case 'noise':
+                categoryLabel = 'Noise protection (residential buildings)';
+                break;
+            case 'gapfill':
+                categoryLabel = 'Gap filling (distance < 500 m)';
+                break;
+            default:
+                categoryLabel = category;
+        }
+    
+        const popupContent = `
+            <div style="font-family: Inter, sans-serif; max-width: 260px;">
+                <strong style="display: block; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                    ${name}
+                </strong>
+                <div style="font-size: 0.85rem; margin: 4px 0;">
+                    <strong style="color: #555;">Category:</strong> ${categoryLabel}
+                </div>
+                <div style="font-size: 0.85rem; margin: 4px 0;">
+                    <strong style="color: #555;">Reason:</strong> ${justification}
+                </div>
+            </div>
+        `;
+    
+        new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(popupContent)
+            .addTo(map);
+    });
+
+
+
+    // Interaction: Change mouse pointer (Pointer)
+    map.on('mouseenter', 'eligible_roads_layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'eligible_roads_layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+A lightweight Node.js middleware that acts as a proxy between GeoServer WFS and the browser. This solution allows you to bypass Cross-Origin Resource Sharing (CORS) restrictions when developing web mapping applications.
