@@ -82,39 +82,29 @@
     map.on('load', () => {
         console.log('Map loaded successfully');
 
-        // Layer 1: All roads
+        // --- Layer 1: All roads (Basis-Layer) ---
         map.addSource('all_roads', {
             type: 'geojson',
             data: `${PROXY_URL}/roads-wfs` 
         });
 
-    map.addLayer({
-        id: 'eligible_roads_layer',
-        type: 'line',
-        source: 'eligible_roads',
-        layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-        },
-        paint: {
-            // Farbe nach category
-            'line-color': [
-                'match',
-                ['get', 'category'],
-                'residential', '#1f78b4', // blau
-                'social',      '#33a02c', // grün
-                'noise',       '#ff7f00', // orange
-                'gapfill',     '#6a3d9a', // lila
-                '#ef4444'                  // fallback
-            ],
-            'line-width': 3,
-            'line-opacity': 0.9
-        }
-    });
+        map.addLayer({
+            id: 'all_roads_layer',
+            type: 'line',
+            source: 'all_roads',
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            paint: {
+                'line-color': '#3b82f6', // Blau
+                'line-width': 2,
+                'line-opacity': 0.6
+            }
+        });
 
 
-
-        // Layer 2: Eligible roads (Tempo 30)
+        // --- Layer 2: Eligible roads (Tempo 30) - DATENGESTEUERT ---
         map.addSource('eligible_roads', {
             type: 'geojson',
             data: `${PROXY_URL}/tempo30-wfs`
@@ -129,9 +119,21 @@
                 'line-cap': 'round'
             },
             paint: {
-                'line-color': '#ef4444', // Rot
                 'line-width': 3,
-                'line-opacity': 0.9
+                'line-opacity': 0.9,
+                
+                // DATENGESTEUERTE FARBGEBUNG BASIEREND AUF DER 'category'-SPALTE
+                'line-color': [
+                    'match',
+                    ['get', 'category'], // Liest den Wert der Eigenschaft 'category'
+                    
+                    'social', '#9400D3',   // Dunkel-Lila: Sozial
+                    'noise', '#FF8C00',    // Dunkel-Orange: Lärmschutz
+                    'residential', '#00BFFF', // Hell-Blau: Wohnstraßen
+                    'gapfill', '#DC143C',  // Rot/Crimson: Lückenschluss
+                    
+                    '#000000' // Fallback (Schwarz, wenn Kategorie fehlt oder unbekannt)
+                ]
             }
         });
 
@@ -142,7 +144,6 @@
             if (e.sourceId === 'eligible_roads' && e.isSourceLoaded) {
                 const features = map.querySourceFeatures('eligible_roads');
                 if (features.length > 0) {
-                    // Create a bounding box around all features
                     const bounds = new maplibregl.LngLatBounds();
                     features.forEach(feature => {
                         if (feature.geometry.type === 'LineString') {
@@ -151,7 +152,6 @@
                             });
                         }
                     });
-                    // Zoom to this bounding box
                     map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
                 }
             }
