@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS tempo30_analysis_result;
 
 CREATE TABLE tempo30_analysis_result AS
-WITH 
+WITH RECURSIVE
 
 -- 1. All residential, primary, secondary and tertiary roads with speed > 30km/h
 relevant_roads AS (
