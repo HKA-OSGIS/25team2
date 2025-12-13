@@ -45,19 +45,19 @@
             <span class="font-medium">All roads</span>
         </li>
         <li class="text-sm flex items-center">
-            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #1f78b4;"></span>
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #00BFFF;"></span> <!-- Hell-Blau für Residential -->
             <span class="font-medium">Residential</span>
         </li>
         <li class="text-sm flex items-center">
-            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #33a02c;"></span>
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #9400D3;"></span> <!-- Dunkel-Lila für Social facilities -->
             <span class="font-medium">Social facilities</span>
         </li>
         <li class="text-sm flex items-center">
-            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #ff7f00;"></span>
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #FF8C00;"></span> <!-- Dunkel-Orange für Noise protection -->
             <span class="font-medium">Noise protection</span>
         </li>
         <li class="text-sm flex items-center">
-            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #6a3d9a;"></span>
+            <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #DC143C;"></span> <!-- Rot/Crimson für Gap filling -->
             <span class="font-medium">Gap filling</span>
         </li>
     </ul>
@@ -122,16 +122,16 @@
                 'line-width': 3,
                 'line-opacity': 0.9,
                 
-                // DATENGESTEUERTE FARBGEBUNG BASIEREND AUF DER 'category'-SPALTE
+                // DATENGESTEUERTE FARBGEBUNG BASIEREND AUF DER 'justification'-SPALTE
                 'line-color': [
                     'match',
-                    ['get', 'category'], // Liest den Wert der Eigenschaft 'category'
+                    ['get', 'justification'], // Geändert von 'category' zu 'justification'
                     
-                    'social_facilities', '#9400D3',   // Dunkel-Lila: Sozial
-                    'noise_protection', '#FF8C00',    // Dunkel-Orange: Lärmschutz
+                    'social_facilities', '#9400D3',   // Dunkel-Lila: Sozial
+                    'noise_protection', '#FF8C00',    // Dunkel-Orange: Lärmschutz
                     'residential', '#00BFFF', // Hell-Blau: Wohnstraßen
-                    'Gap filling / Zone expansion', '#DC143C',  // Rot/Crimson: Lückenschluss
-                    '#000000' // Fallback (Schwarz, wenn Kategorie fehlt oder unbekannt)
+                    'Gap filling / Zone expansion', '#DC143C',  // Rot/Crimson: Lückenschluss
+                    '#000000' // Fallback (Schwarz, wenn Wert fehlt oder unbekannt)
                 ]
             }
         });
@@ -167,11 +167,11 @@
         const props = e.features[0].properties;
     
         const name = props.name || 'Unnamed road';
-        const category = props.category || 'unknown';
-        const justification = props.justification || '';
+        const justification = props.justification || 'unknown'; // Geändert von 'category' zu 'justification'
+        const reason = props.justification || ''; // Optional: Duplikat für Klarheit, falls gewünscht
     
         let categoryLabel;
-        switch (category) {
+        switch (justification) { // Geändert von 'category' zu 'justification'
             case 'residential':
                 categoryLabel = 'Residential (automatic candidate)';
                 break;
@@ -185,7 +185,7 @@
                 categoryLabel = 'Gap filling (distance < 500 m)';
                 break;
             default:
-                categoryLabel = category;
+                categoryLabel = justification;
         }
     
         const popupContent = `
