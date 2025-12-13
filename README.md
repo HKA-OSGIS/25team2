@@ -32,7 +32,7 @@ This project integrates several tools for importing, analyzing, and serving geos
 
 ### 2. Clone this repo
 ```
-git clone https://github.com/svenklingel/tempo30-eligibility
+git clone https://github.com/HKA-OSGIS/25team2
 ```
     
 ### 3. Initialize setup
