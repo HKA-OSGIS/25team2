@@ -30,7 +30,7 @@ if pgrep -f "geoserver" > /dev/null; then
     echo "GeoServer is already running."
 else
     echo "Starting GeoServer..."
-    nohup "$GEOSERVER_HOME/bin/startup.sh" > /dev/null 2>&1 &
+    "$GEOSERVER_HOME/bin/startup.sh" &
 fi
 
 # ------------------------
