@@ -71,7 +71,26 @@
     // Map initialization
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json', 
+        style: {
+            'version': 8,
+            'sources': {
+                'osm-raster-tiles': {
+                    'type': 'raster',
+                    'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    'tileSize': 256,
+                    'minzoom': 0,
+                    'maxzoom': 19,
+                    'attribution': '© OpenStreetMap contributors'
+                }
+            },
+            'layers': [
+                {
+                    'id': 'osm-tiles',
+                    'type': 'raster',
+                    'source': 'osm-raster-tiles'
+                }
+            ]
+        },
         center: [8.725420946651067, 53.11198049933926], // Center in Bremen
         zoom: 12
     });
