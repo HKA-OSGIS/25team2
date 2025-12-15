@@ -72,28 +72,25 @@
     const map = new maplibregl.Map({
         container: 'map',
         style:style: {
-  "version": 8,
-  "sources": {
-    "esri-satellite": {
-      "type": "raster",
-      "tiles": [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      ],
-      "tileSize": 256
-    },
-    "esri-labels": {
-      "type": "raster",
-      "tiles": [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-      ],
-      "tileSize": 256
-    }
-  },
-  "layers": [
-    { "id": "satellite", "type": "raster", "source": "esri-satellite" },
-    { "id": "labels", "type": "raster", "source": "esri-labels" }
-  ]
-},
+            'version': 8,
+            'sources': {
+                'osm-raster-tiles': {
+                    'type': 'raster',
+                    'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    'tileSize': 256,
+                    'minzoom': 0,
+                    'maxzoom': 19,
+                    'attribution': '© OpenStreetMap contributors'
+                }
+            },
+            'layers': [
+                {
+                    'id': 'osm-tiles',
+                    'type': 'raster',
+                    'source': 'osm-raster-tiles'
+                }
+            ]
+        },
 
         center: [8.725420946651067, 53.11198049933926], // Center in Bremen
         zoom: 12
