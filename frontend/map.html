@@ -71,29 +71,29 @@
     // Map initialization
     const map = new maplibregl.Map({
         container: 'map',
-        style: style: {
-  "version": 8,
-  "sources": {
-    "esri-satellite": {
-      "type": "raster",
-      "tiles": [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      ],
-      "tileSize": 256
-    },
-    "esri-labels": {
-      "type": "raster",
-      "tiles": [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-      ],
-      "tileSize": 256
-    }
-  },
-  "layers": [
-    { "id": "satellite", "type": "raster", "source": "esri-satellite" },
-    { "id": "labels", "type": "raster", "source": "esri-labels" }
-  ]
-},
+        style: {
+        "version": 8,
+        "sources": {
+            "esri-satellite": {
+            "type": "raster",
+            "tiles": [
+                "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ],
+            "tileSize": 256
+            },
+            "esri-labels": {
+            "type": "raster",
+            "tiles": [
+                "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+            ],
+            "tileSize": 256
+            }
+        },
+        "layers": [
+            { "id": "satellite", "type": "raster", "source": "esri-satellite" },
+            { "id": "labels", "type": "raster", "source": "esri-labels" }
+        ]
+        },
 
         center: [8.725420946651067, 53.11198049933926], // Center in Bremen
         zoom: 12
