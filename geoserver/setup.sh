@@ -21,7 +21,7 @@ DB_PASS="geoserver"
 DB_HOST="localhost"
 DB_PORT="5432"
 
-LAYER1="planet_osm_roads"
+LAYER1="relevant_roads"
 LAYER2="tempo30_analysis_result"
 
 # ------------------------
