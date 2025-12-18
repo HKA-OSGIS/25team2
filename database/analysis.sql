@@ -2,21 +2,7 @@ DROP TABLE IF EXISTS tempo30_analysis_result;
 
 CREATE TABLE tempo30_analysis_result AS
 WITH 
--- 1. All residential, primary, secondary and tertiary roads with speed > 30km/h
-relevant_roads AS (
-    SELECT 
-        p.osm_id, p.highway, p.name,
-        ST_Transform(p.way, 25832) as geom -- UTM Zone32N (EPSG:25832) for metric calculations
-    FROM planet_osm_line p
-    WHERE p.highway IN ('residential', 'primary', 'secondary', 'tertiary')
-      AND p.highway != 'living_street'
-      -- Exclude roads that already have maxspeed 30
-      AND NOT (
-          (p.tags->'maxspeed') IN ('30', 'DE:zone:30')
-      )
-),
-
--- 2. Trigger objects (social facilities, zebra crossings, residential buildings)
+-- 1. Trigger objects (social facilities, zebra crossings, residential buildings)
 trigger_objects AS (
     -- A. Social Facilities (Polygons/Points/Zebras - 50m radius)
     -- We union points and polygons here to simplify the subsequent joins
@@ -78,28 +64,28 @@ trigger_objects AS (
     WHERE p.building IN ('residential', 'apartments', 'house', 'terrace')
 ),
 
--- 3. Road segments that intersect with buffered trigger objects 
+-- 2. Road segments that intersect with buffered trigger objects 
 road_segments AS (
     SELECT 
         r.osm_id,
         r.name as trigger_road_name, -- Save road name to exclude parallel roads later
         t.type,
         ST_Intersection(r.geom, t.geom) as geom
-    FROM relevant_roads r
+    FROM tempo30_relevant_roads r
     INNER JOIN trigger_objects t 
       ON ST_Intersects(r.geom, t.geom)
 ),
 
--- 4. Zone expansion (300m guarantee) & residential assignment
+-- 3. Zone expansion (300m guarantee) & residential assignment
 raw_zones AS (
     -- Zone expansion: Buffer road segements by 150 m (ensures 300 m minimum length)
     SELECT ST_Buffer(geom, 150) as geom FROM road_segments
     UNION ALL
     -- Residential roads are base zones
-    SELECT geom as geom FROM relevant_roads WHERE highway = 'residential'
+    SELECT geom as geom FROM tempo30_relevant_roads WHERE highway = 'residential'
 ),
 
--- 5. Gap filling: Fills gaps smaller than 500m using morphological closing
+-- 4. Gap filling: Fills gaps smaller than 500m using morphological closing
 gap_fill_mask AS (
     -- Dilation (+250m) followed by Erosion (-250m)
     SELECT 
@@ -107,12 +93,12 @@ gap_fill_mask AS (
     FROM raw_zones
 ),
 
--- 6. Potential candidates within the gap fill mask
+-- 5. Potential candidates within the gap fill mask
 candidates AS (
     SELECT 
         r.osm_id, r.name, r.highway,
         ST_Intersection(r.geom, m.geom) as geom
-    FROM relevant_roads r, gap_fill_mask m
+    FROM tempo30_relevant_roads r, gap_fill_mask m
     WHERE ST_Intersects(r.geom, m.geom)
 )
 -- Result table with justifications
