@@ -10,22 +10,7 @@ analysis_bbox AS (
     ) as geom
 ),
 
--- 2. All residential, primary, secondary and tertiary roads with speed > 30km/h
-relevant_roads AS (
-    SELECT 
-        p.osm_id, p.highway, p.name,
-        ST_Transform(p.way, 25832) as geom -- UTM Zone32N (EPSG:25832) for metric calculations
-    FROM planet_osm_line p, analysis_bbox b
-    WHERE p.way && b.geom 
-      AND p.highway IN ('residential', 'primary', 'secondary', 'tertiary')
-      AND p.highway != 'living_street'
-      -- Exclude roads that already have maxspeed 30
-      AND NOT (
-          (p.tags->'maxspeed') IN ('30', 'DE:zone:30')
-      )
-),
-
--- 3. Trigger objects (social facilities, zebra crossings, residential buildings)
+-- 2. Trigger objects (social facilities, zebra crossings, residential buildings)
 trigger_objects AS (
     -- A. Social Facilities (Polygons/Points/Zebras - 50m radius)
     -- We union points and polygons here to simplify the subsequent joins
@@ -91,7 +76,7 @@ trigger_objects AS (
     WHERE p.way && b.geom AND p.building IN ('residential', 'apartments', 'house', 'terrace')
 ),
 
--- 4. Road segments that intersect with buffered trigger objects 
+-- 3. Road segments that intersect with buffered trigger objects 
 road_segments AS (
     SELECT 
         r.osm_id,
@@ -103,7 +88,7 @@ road_segments AS (
       ON ST_Intersects(r.geom, t.geom)
 ),
 
--- 5. Zone expansion (300m guarantee) & residential assignment
+-- 4. Zone expansion (300m guarantee) & residential assignment
 raw_zones AS (
     -- Zone expansion: Buffer road segements by 150 m (ensures 300 m minimum length)
     SELECT ST_Buffer(geom, 150) as geom FROM road_segments
@@ -112,7 +97,7 @@ raw_zones AS (
     SELECT geom as geom FROM relevant_roads WHERE highway = 'residential'
 ),
 
--- 6. Gap filling: Fills gaps smaller than 500m using morphological closing
+-- 5. Gap filling: Fills gaps smaller than 500m using morphological closing
 gap_fill_mask AS (
     -- Dilation (+250m) followed by Erosion (-250m)
     SELECT 
@@ -120,7 +105,7 @@ gap_fill_mask AS (
     FROM raw_zones
 ),
 
--- 7. Potential candidates within the gap fill mask
+-- 6. Potential candidates within the gap fill mask
 candidates AS (
     SELECT 
         r.osm_id, r.name, r.highway,
