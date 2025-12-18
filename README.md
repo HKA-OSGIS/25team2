@@ -3,6 +3,8 @@
 Automated identification and visualization of Tempo 30 (30 km/h / 20 mph) zones based on OpenStreetMap (OSM) data and PostGIS analysis.
 A Node.js proxy is included to bypass CORS restrictions between the browser and GeoServer.
 
+For a list of recent changes and fixes, see [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 This project is licensed under the MIT License.
 
